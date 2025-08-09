@@ -1,10 +1,19 @@
 'use client';
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import { useToast } from '@/hooks/use-toast';
+
+// --- Faction and Color Configuration ---
+const FACTIONS = {
+    UNCLAIMED: { name: 'Unclaimed', color: '#4A5568' }, // Neutral Gray
+    CYGNUS: { name: 'The Cygnus Syndicate', color: '#29ABE2' }, // Primary Blue
+    ORION: { name: 'Orion Arm Collective', color: '#F59E0B' }, // Amber/Gold
+};
+
+const SELECTED_COLOR = '#90EE90'; // Accent Green
 
 // Helper to create a hexagonal shape
 const HexagonShape = () => {
@@ -21,23 +30,33 @@ const HexagonShape = () => {
 const hexShape = HexagonShape();
 const extrudeSettings = {
     steps: 1,
-    depth: 0.1,
+    depth: 0.2,
     bevelEnabled: true,
-    bevelThickness: 0.1,
-    bevelSize: 0.1,
+    bevelThickness: 0.05,
+    bevelSize: 0.05,
     bevelOffset: 0,
     bevelSegments: 1,
 };
 
-const Territory = ({ position, q, r, s, onSelect, selected }) => {
+const Territory = ({ position, q, r, s, onSelect, selected, faction }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const [hovered, setHover] = useState(false);
     
-    const color = useMemo(() => {
-        if (selected) return '#29ABE2'; // Primary color for selected
-        if (hovered) return '#0077B6'; // A slightly different blue for hover
-        return '#3E5E7A'; // Default neutral color
-    }, [selected, hovered]);
+    const targetColor = useMemo(() => {
+        if (selected) return SELECTED_COLOR;
+        return hovered ? new THREE.Color(faction.color).lerp(new THREE.Color('white'), 0.2).getHexString() : faction.color;
+    }, [selected, hovered, faction.color]);
+
+    const targetY = selected ? position.y + 0.3 : position.y;
+
+    useFrame((state, delta) => {
+        if (meshRef.current) {
+            // Animate color
+            (meshRef.current.material as THREE.MeshStandardMaterial).color.lerp(new THREE.Color(targetColor), delta * 10);
+            // Animate position (for selection pop-up)
+            meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, delta * 8);
+        }
+    });
 
     return (
         <mesh
@@ -50,41 +69,46 @@ const Territory = ({ position, q, r, s, onSelect, selected }) => {
             scale={[0.95, 0.95, 0.95]}
         >
             <extrudeGeometry args={[hexShape, extrudeSettings]} />
-            <meshStandardMaterial color={color} metalness={0.5} roughness={0.1} />
+            <meshStandardMaterial metalness={0.7} roughness={0.3} />
         </mesh>
     );
 };
 
 const HexGrid = ({ onSelectTerritory }) => {
-    const [selectedTerritory, setSelectedTerritory] = useState(null);
-    const [selectedCoords, setSelectedCoords] = useState(null);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const { toast } = useToast();
 
-    const handleSelect = (q, r, s) => {
-        const id = `${q},${r},${s}`;
-        setSelectedTerritory(id);
-        const coords = { q, r, s };
-        setSelectedCoords(coords);
-        onSelectTerritory(coords);
+    const handleSelect = (hex) => {
+        const id = `${hex.q},${hex.r},${hex.s}`;
+        setSelectedId(id);
+        onSelectTerritory(hex);
         toast({
-            title: "Territory Selected",
-            description: `You have selected sector at coordinates: Q:${q}, R:${r}, S:${s}.`,
+            title: `Sector ${hex.q}, ${hex.r}, ${hex.s}`,
+            description: `Faction: ${hex.faction.name}`,
         });
     };
     
     const hexes = useMemo(() => {
         const hexArray = [];
-        const mapRadius = 5;
+        const mapRadius = 7;
         for (let q = -mapRadius; q <= mapRadius; q++) {
             const r1 = Math.max(-mapRadius, -q - mapRadius);
             const r2 = Math.min(mapRadius, -q + mapRadius);
             for (let r = r1; r <= r2; r++) {
                 const s = -q - r;
-                const x = 1.732 * q + 0.866 * r; // sqrt(3) ~= 1.732
-                const y = 1.5 * r;
+
+                // Assign faction randomly
+                let faction = FACTIONS.UNCLAIMED;
+                const rand = Math.random();
+                if (rand > 0.7) {
+                    faction = FACTIONS.CYGNUS;
+                } else if (rand > 0.4) {
+                    faction = FACTIONS.ORION;
+                }
+
                 hexArray.push({
-                    q, r, s,
-                    position: new THREE.Vector3(x, 0, y), // changed y to z for horizontal plane
+                    q, r, s, faction,
+                    position: new THREE.Vector3(1.732 * q + 0.866 * r, 0, 1.5 * r),
                 });
             }
         }
@@ -92,14 +116,13 @@ const HexGrid = ({ onSelectTerritory }) => {
     }, []);
 
     return (
-        <group rotation={[0, 0, 0]}>
-            {hexes.map(({ q, r, s, position }) => (
+        <group>
+            {hexes.map((hex) => (
                 <Territory
-                    key={`${q},${r},${s}`}
-                    position={position}
-                    q={q} r={r} s={s}
-                    selected={selectedTerritory === `${q},${r},${s}`}
-                    onSelect={() => handleSelect(q, r, s)}
+                    key={`${hex.q},${hex.r},${hex.s}`}
+                    {...hex}
+                    selected={selectedId === `${hex.q},${hex.r},${hex.s}`}
+                    onSelect={() => handleSelect(hex)}
                 />
             ))}
         </group>
@@ -107,24 +130,20 @@ const HexGrid = ({ onSelectTerritory }) => {
 };
 
 const SceneContent = () => {
-    const handleTerritorySelect = (coords) => {
-        // This is where you would update global state, e.g., show info in a UI panel
-        console.log('Selected territory:', coords);
+    const handleTerritorySelect = (hex) => {
+        console.log('Selected territory:', hex);
     };
 
     return (
         <>
-            <ambientLight intensity={0.5} />
-            <directionalLight
-                position={[5, 10, 7]}
-                intensity={1.5}
-                castShadow
-            />
+            <ambientLight intensity={0.3} />
+            <directionalLight position={[10, 20, 5]} intensity={1.5} />
             <pointLight position={[-10, -10, -10]} intensity={1.5} color="#29ABE2" />
             
+            <fog attach="fog" args={['#171717', 30, 80]} />
             <Stars radius={200} depth={50} count={10000} factor={6} saturation={0} fade speed={1.5} />
 
-            <group position={[0, 0, 0]}>
+            <group position={[0, -0.5, 0]}>
                 <HexGrid onSelectTerritory={handleTerritorySelect} />
             </group>
 
@@ -134,8 +153,8 @@ const SceneContent = () => {
                 enableRotate={true}
                 minDistance={5}
                 maxDistance={50}
-                maxPolarAngle={Math.PI / 2}
-                minPolarAngle={0}
+                maxPolarAngle={Math.PI / 2.1}
+                minPolarAngle={Math.PI / 6}
             />
         </>
     );
@@ -145,7 +164,7 @@ const ThreeScene = () => {
   return (
     <div className="absolute top-0 left-0 w-full h-full">
       <Canvas
-        camera={{ position: [0, 15, 25], fov: 50 }}
+        camera={{ position: [0, 20, 35], fov: 50 }}
         shadows
       >
         <SceneContent />
