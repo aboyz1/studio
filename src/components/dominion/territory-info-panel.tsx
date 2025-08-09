@@ -1,7 +1,7 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, Users, Atom, Shield, MapPin, BarChart3 } from 'lucide-react';
+import { X, Users, Atom, Shield, MapPin, BarChart3, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
 
@@ -12,7 +12,9 @@ const FACTION_COLORS = {
 };
 
 export default function TerritoryInfoPanel({ territory, onClose }) {
-    const factionColor = territory ? FACTION_COLORS[territory.faction.name] : '';
+    if (!territory) return null;
+
+    const factionColor = FACTION_COLORS[territory.faction.name] || '';
 
     return (
         <div className={cn(
@@ -26,44 +28,46 @@ export default function TerritoryInfoPanel({ territory, onClose }) {
                 territory?.faction.name === 'Orion Arm Collective' && 'border-amber-400',
                 territory?.faction.name === 'Unclaimed' && 'border-gray-400',
             )}>
-                {territory && (
-                    <>
-                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-10" onClick={onClose}>
-                            <X size={20} />
-                        </Button>
-                        <CardHeader className="pr-10">
-                            <CardTitle className="font-headline text-lg">Sector {territory.q}, {territory.r}</CardTitle>
-                            <CardDescription className={cn("font-semibold", factionColor)}>
-                                {territory.faction.name}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4 text-sm">
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-2 text-muted-foreground"><Users size={16} /> Population</span>
-                                    <span className="font-mono">{territory.population}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-2 text-muted-foreground"><Atom size={16} /> Dominant Resource</span>
-                                    <span className="font-mono">{territory.resource}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-2 text-muted-foreground"><Shield size={16} /> Defense Grid</span>
-                                    <span className="font-mono">{territory.defense}</span>
-                                </div>
+                <>
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-10" onClick={onClose}>
+                        <X size={20} />
+                    </Button>
+                    <CardHeader className="pr-10">
+                        <CardTitle className="font-headline text-lg">{territory.name}</CardTitle>
+                        <CardDescription className={cn("font-semibold", factionColor)}>
+                            {territory.faction.name} Controlled System
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2 text-muted-foreground"><Star size={16} /> Star Type</span>
+                                <span className="font-mono">{territory.starType}</span>
                             </div>
-                            <Separator />
-                            <div className="space-y-3 pt-2">
-                               <Button className="w-full font-headline">
-                                   <MapPin size={16} className="mr-2"/> View Fleets
-                               </Button>
-                               <Button variant="secondary" className="w-full font-headline">
-                                    <BarChart3 size={16} className="mr-2"/> Economic Report
-                               </Button>
+                            <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2 text-muted-foreground"><Users size={16} /> Population</span>
+                                <span className="font-mono">{territory.population}</span>
                             </div>
-                        </CardContent>
-                    </>
-                )}
+                            <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2 text-muted-foreground"><Atom size={16} /> Dominant Resource</span>
+                                <span className="font-mono">{territory.resource}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2 text-muted-foreground"><Shield size={16} /> Defense Grid</span>
+                                <span className="font-mono">{territory.defense}</span>
+                            </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-3 pt-2">
+                           <Button className="w-full font-headline">
+                               <MapPin size={16} className="mr-2"/> View Fleets
+                           </Button>
+                           <Button variant="secondary" className="w-full font-headline">
+                                <BarChart3 size={16} className="mr-2"/> Economic Report
+                           </Button>
+                        </div>
+                    </CardContent>
+                </>
             </Card>
         </div>
     );
