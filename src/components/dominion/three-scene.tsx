@@ -232,12 +232,12 @@ const SceneContent = ({ setSelectedTerritory }) => {
 
             <Suspense fallback={null}>
                 <Text
-                    position={[0, 12, 0]}
-                    fontSize={4}
+                    position={[0, 15, -30]}
+                    fontSize={6}
                     color="white"
                     anchorX="center"
                     anchorY="middle"
-                    outlineWidth={0.05}
+                    outlineWidth={0.1}
                     outlineColor="#000000"
                 >
                     SECTOR MAP
