@@ -6,8 +6,15 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Skeleton } from '../ui/skeleton';
 import { useEffect, useState } from 'react';
+import { ViewMode } from '@/app/page';
+import { cn } from '@/lib/utils';
 
-export default function Header() {
+type HeaderProps = {
+  activeView: ViewMode;
+  onNavigate: (view: ViewMode) => void;
+};
+
+export default function Header({ activeView, onNavigate }: HeaderProps) {
   const { wallet } = useWallet();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -25,7 +32,20 @@ export default function Header() {
         </h1>
       </div>
       <nav className="hidden md:flex items-center gap-2 lg:gap-4">
-        <Button variant="ghost" className="font-headline">Map</Button>
+        <Button 
+          variant={activeView === 'dashboard' ? 'secondary' : 'ghost'} 
+          className="font-headline"
+          onClick={() => onNavigate('dashboard')}
+        >
+          Dashboard
+        </Button>
+        <Button 
+          variant={activeView === 'map' ? 'secondary' : 'ghost'} 
+          className="font-headline"
+          onClick={() => onNavigate('map')}
+        >
+          Map
+        </Button>
         <Button variant="ghost" className="font-headline">Missions</Button>
         <Button variant="ghost" className="font-headline">Characters</Button>
         <Button variant="ghost" className="font-headline">Factions</Button>

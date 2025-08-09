@@ -150,7 +150,7 @@ const SceneContent = () => {
 
 const ThreeScene = () => {
   return (
-    <div className="absolute top-0 left-0 w-full h-full -z-0">
+    <div className="absolute top-0 left-0 w-full h-full">
       <Canvas
         camera={{ position: [0, 15, 20], fov: 50 }}
         shadows
