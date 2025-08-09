@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const ThreeScene = dynamic(() => import('@/components/dominion/three-scene'), {
   ssr: false,
-  loading: () => <Skeleton className="absolute top-0 left-0 w-full h-full -z-10 bg-background" />,
+  loading: () => <Skeleton className="absolute top-0 left-0 w-full h-full bg-background" />,
 });
 
 export default function Home() {
