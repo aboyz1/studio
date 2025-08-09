@@ -57,12 +57,15 @@ const Territory = ({ position, q, r, s, onSelect, selected }) => {
 
 const HexGrid = ({ onSelectTerritory }) => {
     const [selectedTerritory, setSelectedTerritory] = useState(null);
+    const [selectedCoords, setSelectedCoords] = useState(null);
     const { toast } = useToast();
 
     const handleSelect = (q, r, s) => {
         const id = `${q},${r},${s}`;
         setSelectedTerritory(id);
-        onSelectTerritory({ q, r, s });
+        const coords = { q, r, s };
+        setSelectedCoords(coords);
+        onSelectTerritory(coords);
         toast({
             title: "Territory Selected",
             description: `You have selected sector at coordinates: Q:${q}, R:${r}, S:${s}.`,
@@ -81,7 +84,7 @@ const HexGrid = ({ onSelectTerritory }) => {
                 const y = 1.5 * r;
                 hexArray.push({
                     q, r, s,
-                    position: new THREE.Vector3(x, y, 0),
+                    position: new THREE.Vector3(x, 0, y), // changed y to z for horizontal plane
                 });
             }
         }
@@ -89,7 +92,7 @@ const HexGrid = ({ onSelectTerritory }) => {
     }, []);
 
     return (
-        <group>
+        <group rotation={[0, 0, 0]}>
             {hexes.map(({ q, r, s, position }) => (
                 <Territory
                     key={`${q},${r},${s}`}
@@ -99,6 +102,18 @@ const HexGrid = ({ onSelectTerritory }) => {
                     onSelect={() => handleSelect(q, r, s)}
                 />
             ))}
+            {selectedCoords && (
+                 <Text
+                    position={[0, -2, 5]}
+                    fontSize={1}
+                    color="white"
+                    anchorX="center"
+                    anchorY="middle"
+                    font="/fonts/SpaceGrotesk-Bold.woff"
+                >
+                    {`SECTOR ${selectedCoords.q}, ${selectedCoords.r}, ${selectedCoords.s}`}
+                </Text>
+            )}
         </group>
     );
 };
@@ -117,11 +132,22 @@ const SceneContent = () => {
                 intensity={1.5}
                 castShadow
             />
-            <pointLight position={[-5, -10, -5]} intensity={0.8} color="#29ABE2" />
+            <pointLight position={[-10, -10, -10]} intensity={1.5} color="#29ABE2" />
             
             <Stars radius={200} depth={50} count={10000} factor={6} saturation={0} fade speed={1.5} />
             
-            <group position={[0, -2, 0]} rotation={[0, 0, 0]}>
+             <Text
+                position={[0, 6, 0]}
+                fontSize={2.5}
+                color="#FFFFFF"
+                anchorX="center"
+                anchorY="middle"
+                font="/fonts/SpaceGrotesk-Bold.woff"
+                >
+                SECTOR MAP
+            </Text>
+
+            <group position={[0, 0, 0]}>
                 <HexGrid onSelectTerritory={handleTerritorySelect} />
             </group>
 
@@ -131,7 +157,8 @@ const SceneContent = () => {
                 enableRotate={true}
                 minDistance={5}
                 maxDistance={50}
-                maxPolarAngle={Math.PI / 2.2}
+                maxPolarAngle={Math.PI / 2}
+                minPolarAngle={0}
             />
         </>
     );
@@ -141,7 +168,7 @@ const ThreeScene = () => {
   return (
     <div className="absolute top-0 left-0 w-full h-full">
       <Canvas
-        camera={{ position: [0, 15, 20], fov: 50 }}
+        camera={{ position: [0, 15, 25], fov: 50 }}
         shadows
       >
         <SceneContent />
