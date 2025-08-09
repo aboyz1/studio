@@ -230,20 +230,6 @@ const SceneContent = ({ setSelectedTerritory }) => {
             <pointLight position={[40, 5, 0]} color={FACTIONS.CYGNUS.color} intensity={150} distance={100} />
             <pointLight position={[-40, 5, 0]} color={FACTIONS.ORION.color} intensity={150} distance={100} />
 
-            <Suspense fallback={null}>
-                <Text
-                    position={[0, 8, -30]}
-                    fontSize={6}
-                    color="white"
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={0.1}
-                    outlineColor="#000000"
-                >
-                    SECTOR MAP
-                </Text>
-            </Suspense>
-
             <group position={[0, -0.5, 0]}>
                 <HexGrid onSelectTerritory={setSelectedTerritory} />
             </group>
