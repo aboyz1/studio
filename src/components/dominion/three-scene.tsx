@@ -140,8 +140,8 @@ const BackgroundElements = () => {
         <>
             <fog attach="fog" args={['#101015', 30, 90]} />
             <Stars radius={200} depth={50} count={10000} factor={6} saturation={0} fade speed={1.5} />
-            <ambientLight intensity={0.1} />
-            <directionalLight position={[10, 20, 5]} intensity={1.0} />
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[10, 20, 5]} intensity={1.5} />
             <pointLight position={[-30, -20, -40]} intensity={2.5} color={FACTIONS.CYGNUS.color} />
             <pointLight position={[30, 20, -30]} intensity={2.0} color={FACTIONS.ORION.color} />
 
