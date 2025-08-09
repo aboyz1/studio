@@ -125,17 +125,6 @@ const SceneContent = () => {
                 <HexGrid onSelectTerritory={handleTerritorySelect} />
             </group>
 
-            <Text
-                position={[0, 4, -5]}
-                fontSize={1}
-                color="white"
-                anchorX="center"
-                anchorY="middle"
-                font="/fonts/SpaceGrotesk-Bold.woff"
-            >
-                Dominion 3D
-            </Text>
-
             <OrbitControls
                 enableZoom={true}
                 enablePan={true}
