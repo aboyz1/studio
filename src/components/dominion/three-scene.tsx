@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text } from '@react-three/drei';
+import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import { useToast } from '@/hooks/use-toast';
 
@@ -102,18 +102,6 @@ const HexGrid = ({ onSelectTerritory }) => {
                     onSelect={() => handleSelect(q, r, s)}
                 />
             ))}
-            {selectedCoords && (
-                 <Text
-                    position={[0, -2, 5]}
-                    fontSize={1}
-                    color="white"
-                    anchorX="center"
-                    anchorY="middle"
-                    font="/fonts/SpaceGrotesk-Bold.woff"
-                >
-                    {`SECTOR ${selectedCoords.q}, ${selectedCoords.r}, ${selectedCoords.s}`}
-                </Text>
-            )}
         </group>
     );
 };
@@ -135,17 +123,6 @@ const SceneContent = () => {
             <pointLight position={[-10, -10, -10]} intensity={1.5} color="#29ABE2" />
             
             <Stars radius={200} depth={50} count={10000} factor={6} saturation={0} fade speed={1.5} />
-            
-             <Text
-                position={[0, 6, 0]}
-                fontSize={2.5}
-                color="#FFFFFF"
-                anchorX="center"
-                anchorY="middle"
-                font="/fonts/SpaceGrotesk-Bold.woff"
-                >
-                SECTOR MAP
-            </Text>
 
             <group position={[0, 0, 0]}>
                 <HexGrid onSelectTerritory={handleTerritorySelect} />
