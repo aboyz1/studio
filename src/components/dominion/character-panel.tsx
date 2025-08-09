@@ -1,10 +1,11 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Gem, Swords, Shield, Heart, Quote } from 'lucide-react';
+import { Gem, Swords, Shield, Heart, Quote, RefreshCw } from 'lucide-react';
 
 type Character = {
     name: string;
@@ -19,46 +20,48 @@ type Character = {
     imagePrompt: string;
 };
 
-const staticCharacters: Character[] = [
-    {
-        name: 'Jax "The Void"',
-        level: 18,
-        rarity: 'Legendary',
-        stats: { attack: 95, defense: 80, health: 140 },
-        backstory: 'A rogue pilot whose ship is rumored to be powered by a miniature black hole.',
-        imagePrompt: 'cyberpunk pilot legendary'
-    },
-    {
-        name: 'Seraphina',
-        level: 15,
-        rarity: 'Epic',
-        stats: { attack: 80, defense: 65, health: 110 },
-        backstory: 'A master strategist who can predict enemy movements with uncanny accuracy.',
-        imagePrompt: 'female strategist epic'
-    },
-    {
-        name: 'Grunt-7',
-        level: 10,
-        rarity: 'Rare',
-        stats: { attack: 60, defense: 90, health: 120 },
-        backstory: 'A genetically engineered super-soldier, loyal only to the highest bidder.',
-        imagePrompt: 'armored super soldier rare'
-    },
-    {
-        name: 'Rook',
-        level: 8,
-        rarity: 'Common',
-        stats: { attack: 45, defense: 55, health: 90 },
-        backstory: 'A scrappy mechanic who keeps the faction\'s ships flying with spit and grit.',
-        imagePrompt: 'space mechanic common'
-    },
+const firstNames = ['Jax', 'Seraphina', 'Valerius', 'Kael', 'Nyx', 'Rook', 'Orion', 'Lyra'];
+const epithets = ['The Void', 'The Star-Smasher', 'The Comet', 'The Swift', 'The Shadow', 'The Engineer', 'The Merciless', 'The Ghost'];
+const backstorySnippets = [
+    'A rogue pilot whose ship is rumored to be powered by a miniature black hole.',
+    'A master strategist who can predict enemy movements with uncanny accuracy.',
+    'A genetically engineered super-soldier, loyal only to the highest bidder.',
+    'A scrappy mechanic who keeps the faction\'s ships flying with spit and grit.',
+    'A bounty hunter who never fails to bring back their target, dead or alive.',
+    'A disgraced royal guard seeking to restore their honor on the battlefield.',
+    'A cybernetic ronin wandering the galaxy in search of a worthy opponent.'
 ];
+const imagePrompts = ['cyberpunk pilot', 'female strategist', 'armored super soldier', 'space mechanic', 'bounty hunter', 'royal guard', 'cybernetic ronin'];
 
 const rarityColor: Record<string, string> = {
     Common: 'border-gray-400',
     Rare: 'border-blue-500',
     Epic: 'border-purple-500',
     Legendary: 'border-yellow-500',
+};
+
+const getRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+
+const generateCharacter = (): Character => {
+    const attack = 50 + Math.floor(Math.random() * 50);
+    const defense = 50 + Math.floor(Math.random() * 50);
+    const health = 90 + Math.floor(Math.random() * 60);
+    const totalStats = attack + defense + health;
+    const backstoryIndex = Math.floor(Math.random() * backstorySnippets.length);
+
+    let rarity: Character['rarity'] = 'Common';
+    if (totalStats > 280) rarity = 'Legendary';
+    else if (totalStats > 240) rarity = 'Epic';
+    else if (totalStats > 200) rarity = 'Rare';
+
+    return {
+        name: `${getRandom(firstNames)} "${getRandom(epithets)}"`,
+        level: Math.floor(1 + Math.random() * 19),
+        rarity,
+        stats: { attack, defense, health },
+        backstory: backstorySnippets[backstoryIndex],
+        imagePrompt: `${imagePrompts[backstoryIndex]} ${rarity.toLowerCase()}`,
+    };
 };
 
 function CharacterCard({ char }: { char: Character }) {
@@ -101,12 +104,28 @@ function CharacterCard({ char }: { char: Character }) {
 }
 
 export default function CharacterPanel() {
+    const [characters, setCharacters] = useState<Character[]>([]);
+
+    const regenerateCharacters = () => {
+        setCharacters(Array.from({ length: 8 }, generateCharacter));
+    }
+
+    useEffect(() => {
+        regenerateCharacters();
+    }, []);
+
     return (
         <Card className="h-full bg-transparent border-0 shadow-none">
             <CardContent className="p-0 h-full flex flex-col">
-                <ScrollArea className="h-[calc(100vh-23rem)] md:h-[calc(100vh-27rem)] lg:h-[calc(100vh-25rem)]">
+                 <div className="p-4 pl-0 pb-2 flex justify-end">
+                    <Button onClick={regenerateCharacters} variant="outline">
+                        <RefreshCw size={16} className="mr-2" />
+                        Regenerate
+                    </Button>
+                </div>
+                <ScrollArea className="h-[calc(100vh-27rem)] md:h-[calc(100vh-31rem)] lg:h-[calc(100vh-29rem)]">
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4">
-                        {staticCharacters.map((char) => <CharacterCard key={char.name} char={char} />)}
+                        {characters.map((char) => <CharacterCard key={char.name} char={char} />)}
                     </div>
                 </ScrollArea>
             </CardContent>
