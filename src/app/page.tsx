@@ -11,7 +11,16 @@ import BackgroundScene from '@/components/dominion/background-scene';
 
 const ThreeScene = dynamic(() => import('@/components/dominion/three-scene'), {
   ssr: false,
-  loading: () => <Skeleton className="absolute top-0 left-0 w-full h-full bg-background" />,
+  loading: () => (
+    <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center bg-background">
+      <Skeleton className="absolute w-full h-full" />
+      <div className="z-10 flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+        <p className="text-xl font-headline text-foreground">Generating Sector Map...</p>
+        <p className="text-muted-foreground">Please wait while we render the galaxy.</p>
+      </div>
+    </div>
+  ),
 });
 
 export type ViewMode = 'dashboard' | 'map';
