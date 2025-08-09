@@ -8,7 +8,6 @@ import MainPanel from '@/components/dominion/main-panel';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import BackgroundScene from '@/components/dominion/background-scene';
-import { cn } from '@/lib/utils';
 
 const ThreeScene = dynamic(() => import('@/components/dominion/three-scene'), {
   ssr: false,
@@ -22,12 +21,7 @@ export default function Home() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      <div className={cn('absolute inset-0 transition-opacity duration-500', view === 'dashboard' ? 'opacity-100' : 'opacity-0')}>
-        <BackgroundScene />
-      </div>
-      <div className={cn('absolute inset-0 transition-opacity duration-500', view === 'map' ? 'opacity-100' : 'opacity-0 pointer-events-none')}>
-        <ThreeScene />
-      </div>
+      {view === 'dashboard' ? <BackgroundScene /> : <ThreeScene />}
       
       <div className="absolute inset-0 flex flex-col h-screen">
         <Header activeView={view} onNavigate={setView} />
