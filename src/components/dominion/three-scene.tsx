@@ -131,6 +131,41 @@ const HexGrid = ({ onSelectTerritory }) => {
     );
 };
 
+const FloatingAsteroids = () => {
+    const count = 200;
+    const groupRef = useRef<THREE.Group>(null);
+  
+    const asteroids = useMemo(() => {
+      const temp = [];
+      for (let i = 0; i < count; i++) {
+        const x = (Math.random() - 0.5) * 100;
+        const y = (Math.random() - 0.5) * 20;
+        const z = (Math.random() - 0.5) * 100;
+        const size = Math.random() * 0.3 + 0.1;
+        const rotation = [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI];
+        temp.push({ position: [x, y, z], size, rotation });
+      }
+      return temp;
+    }, []);
+  
+    useFrame((state, delta) => {
+      if (groupRef.current) {
+        groupRef.current.rotation.y += delta * 0.02;
+      }
+    });
+  
+    return (
+      <group ref={groupRef}>
+        {asteroids.map((asteroid, i) => (
+          <mesh key={i} position={asteroid.position as [number, number, number]} rotation={asteroid.rotation as [number, number, number]}>
+            <dodecahedronGeometry args={[asteroid.size, 0]} />
+            <meshStandardMaterial color="#555" roughness={0.8} />
+          </mesh>
+        ))}
+      </group>
+    );
+  };
+
 const BackgroundElements = () => {
     return (
         <>
@@ -140,6 +175,7 @@ const BackgroundElements = () => {
             <directionalLight position={[10, 20, 5]} intensity={1.5} />
             <pointLight position={[-30, -20, -40]} intensity={2.5} color={FACTIONS.CYGNUS.color} />
             <pointLight position={[30, 20, -30]} intensity={2.0} color={FACTIONS.ORION.color} />
+            <FloatingAsteroids />
         </>
     );
 };
