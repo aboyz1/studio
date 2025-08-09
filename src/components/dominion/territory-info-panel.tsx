@@ -11,6 +11,7 @@ const FACTION_COLORS = {
     'Unclaimed': 'text-gray-400',
 };
 
+// This is a new version of the component that no longer uses territory.starType
 export default function TerritoryInfoPanel({ territory, onClose }) {
     if (!territory) return null;
 
@@ -41,8 +42,8 @@ export default function TerritoryInfoPanel({ territory, onClose }) {
                     <CardContent className="space-y-4 text-sm">
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="flex items-center gap-2 text-muted-foreground"><Star size={16} /> Star Type</span>
-                                <span className="font-mono">{territory.starType}</span>
+                                <span className="flex items-center gap-2 text-muted-foreground"><MapPin size={16} /> Coordinates</span>
+                                <span className="font-mono">Q:{territory.q}, R:{territory.r}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="flex items-center gap-2 text-muted-foreground"><Users size={16} /> Population</span>
