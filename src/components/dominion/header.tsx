@@ -3,8 +3,19 @@
 import { DominionIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { Skeleton } from '../ui/skeleton';
+import { useEffect, useState } from 'react';
 
 export default function Header() {
+  const { wallet } = useWallet();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+
   return (
     <header className="flex items-center justify-between p-4 bg-background/50 backdrop-blur-sm border-b border-border/50">
       <div className="flex items-center gap-4">
@@ -20,12 +31,16 @@ export default function Header() {
         <Button variant="ghost" className="font-headline">Factions</Button>
         <Button variant="ghost" className="font-headline">Marketplace</Button>
       </nav>
-      <WalletMultiButton style={{
-        backgroundColor: 'hsl(var(--primary))',
-        color: 'hsl(var(--primary-foreground))',
-        borderRadius: 'var(--radius)',
-        fontFamily: '"Space Grotesk", sans-serif'
-      }} />
+      {isMounted ? (
+          <WalletMultiButton style={{
+            backgroundColor: 'hsl(var(--primary))',
+            color: 'hsl(var(--primary-foreground))',
+            borderRadius: 'var(--radius)',
+            fontFamily: '"Space Grotesk", sans-serif'
+          }} />
+      ) : (
+        <Skeleton className="h-10 w-36" />
+      )}
     </header>
   );
 }
