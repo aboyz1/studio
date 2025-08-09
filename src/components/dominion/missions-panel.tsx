@@ -1,20 +1,35 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Rocket, Target, Gem, Clock } from 'lucide-react';
+import { Rocket, Target, Gem, Clock, CheckCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
-const missions = [
+type MissionStatus = 'Available' | 'In Progress' | 'Completed';
+
+type Mission = {
+  id: number;
+  title: string;
+  description: string;
+  progress: number;
+  reward: string;
+  duration: number; // in seconds
+  timeLeft: number; // in seconds
+  status: MissionStatus;
+};
+
+const initialMissions: Mission[] = [
   {
     id: 1,
     title: 'Recon Sector 7-G',
     description: 'Scout the asteroid belt for enemy presence.',
-    progress: 75,
+    progress: 0,
     reward: '500 Credits',
-    time: '2h 15m remaining',
-    status: 'In Progress',
+    duration: 120, // 2 minutes
+    timeLeft: 120,
+    status: 'Available',
   },
   {
     id: 2,
@@ -22,17 +37,19 @@ const missions = [
     description: 'Intercept a rival faction\'s supply convoy.',
     progress: 0,
     reward: '2 Faction Tokens',
-    time: '4h duration',
+    duration: 240, // 4 minutes
+    timeLeft: 240,
     status: 'Available',
   },
   {
     id: 3,
     title: 'Defend Cygnus Outpost',
     description: 'Repel the incoming attack on our territory.',
-    progress: 100,
+    progress: 0,
     reward: '1 Rare Crate',
-    time: 'Completed',
-    status: 'Completed',
+    duration: 60, // 1 minute
+    timeLeft: 60,
+    status: 'Available',
   },
   {
     id: 4,
@@ -40,26 +57,82 @@ const missions = [
     description: 'Infiltrate a corporate data-haven and extract intel.',
     progress: 0,
     reward: '1 Epic DNA Key',
-    time: '8h duration',
+    duration: 300, // 5 minutes
+    timeLeft: 300,
     status: 'Available',
   },
 ];
 
+const formatTime = (seconds: number) => {
+    if (seconds <= 0) return '0s';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return [h > 0 ? `${h}h` : '', m > 0 ? `${m}m` : '', s > 0 ? `${s}s` : '']
+        .filter(Boolean)
+        .join(' ');
+};
+
 export default function MissionsPanel() {
   const { toast } = useToast();
+  const [missions, setMissions] = useState<Mission[]>(initialMissions);
 
-  const handleMissionAction = (status: string, title: string) => {
-    if (status === 'Available') {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMissions(prevMissions => 
+        prevMissions.map(mission => {
+          if (mission.status === 'In Progress' && mission.timeLeft > 0) {
+            const newTimeLeft = mission.timeLeft - 1;
+            const newProgress = Math.min(100, ((mission.duration - newTimeLeft) / mission.duration) * 100);
+            if (newTimeLeft <= 0) {
+              return { ...mission, timeLeft: 0, progress: 100, status: 'Completed' };
+            }
+            return { ...mission, timeLeft: newTimeLeft, progress: newProgress };
+          }
+          return mission;
+        })
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleMissionAction = (missionId: number) => {
+    const mission = missions.find(m => m.id === missionId);
+    if (!mission) return;
+
+    if (mission.status === 'Available') {
+      setMissions(prevMissions =>
+        prevMissions.map(m =>
+          m.id === missionId ? { ...m, status: 'In Progress' } : m
+        )
+      );
       toast({
         title: "Starting Mission",
-        description: `Your squad has been dispatched for "${title}".`,
-      })
-    } else if (status === 'Completed') {
+        description: `Your squad has been dispatched for "${mission.title}".`,
+      });
+    } else if (mission.status === 'Completed') {
+      setMissions(prevMissions =>
+        prevMissions.map(m =>
+          m.id === missionId 
+            ? { ...m, status: 'Available', progress: 0, timeLeft: m.duration } 
+            : m
+        )
+      );
       toast({
         title: "Claiming Rewards",
-        description: `Rewards for "${title}" have been added to your inventory.`,
-      })
+        description: `Rewards for "${mission.title}" have been added to your inventory.`,
+      });
     }
+  };
+
+  const getMissionTimeText = (mission: Mission) => {
+      switch(mission.status) {
+          case 'Available': return `${formatTime(mission.duration)} duration`;
+          case 'In Progress': return `${formatTime(mission.timeLeft)} remaining`;
+          case 'Completed': return 'Completed';
+          default: return '';
+      }
   }
 
   return (
@@ -80,17 +153,18 @@ export default function MissionsPanel() {
                 
                 <div className="flex justify-between items-center text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Gem size={12} className="text-accent" /> {mission.reward}</span>
-                    <span className="flex items-center gap-1"><Clock size={12} /> {mission.time}</span>
+                    <span className="flex items-center gap-1"><Clock size={12} /> {getMissionTimeText(mission)}</span>
                 </div>
 
                 <Button 
                   className="w-full"
                   variant={mission.status === 'Available' ? 'default' : mission.status === 'Completed' ? 'secondary' : 'outline'}
                   disabled={mission.status === 'In Progress'}
-                  onClick={() => handleMissionAction(mission.status, mission.title)}
+                  onClick={() => handleMissionAction(mission.id)}
                 >
                   {mission.status === 'Available' && <Rocket className="mr-2" size={16} />}
-                  {mission.status}
+                  {mission.status === 'Completed' && <CheckCircle className="mr-2" size={16} />}
+                  {mission.status === 'Completed' ? 'Claim Reward' : mission.status}
                 </Button>
               </div>
             ))}
