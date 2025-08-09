@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Gem, Swords, Shield, Heart, Quote, RefreshCw } from 'lucide-react';
 
 type Character = {
+    id: string;
     name: string;
     level: number;
     rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
@@ -55,6 +56,7 @@ const generateCharacter = (): Character => {
     else if (totalStats > 200) rarity = 'Rare';
 
     return {
+        id: crypto.randomUUID(),
         name: `${getRandom(firstNames)} "${getRandom(epithets)}"`,
         level: Math.floor(1 + Math.random() * 19),
         rarity,
@@ -125,7 +127,7 @@ export default function CharacterPanel() {
                 </div>
                 <ScrollArea className="h-[calc(100vh-27rem)] md:h-[calc(100vh-31rem)] lg:h-[calc(100vh-29rem)]">
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4">
-                        {characters.map((char) => <CharacterCard key={char.name} char={char} />)}
+                        {characters.map((char) => <CharacterCard key={char.id} char={char} />)}
                     </div>
                 </ScrollArea>
             </CardContent>
