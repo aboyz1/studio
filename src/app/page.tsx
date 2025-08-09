@@ -1,9 +1,15 @@
-import ThreeScene from '@/components/dominion/three-scene';
 import Header from '@/components/dominion/header';
 import MissionsPanel from '@/components/dominion/missions-panel';
 import FactionsPanel from '@/components/dominion/factions-panel';
 import PlayerStats from '@/components/dominion/player-stats';
 import MainPanel from '@/components/dominion/main-panel';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const ThreeScene = dynamic(() => import('@/components/dominion/three-scene'), {
+  ssr: false,
+  loading: () => <Skeleton className="absolute top-0 left-0 w-full h-full -z-10 bg-background" />,
+});
 
 export default function Home() {
   return (
