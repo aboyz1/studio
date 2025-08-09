@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useRef, useState, useMemo, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import React, { useRef, useState, useMemo, Suspense } from 'react';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { OrbitControls, Stars, Billboard, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { useToast } from '@/hooks/use-toast';
+import TerritoryInfoPanel from './territory-info-panel';
 
 // --- Faction and Color Configuration ---
 const FACTIONS = {
@@ -38,22 +38,32 @@ const extrudeSettings = {
     bevelSegments: 1,
 };
 
-const Territory = ({ position, q, r, s, onSelect, selected, faction }) => {
+// --- Data Generation ---
+const resources = ['Crystalline Dilithium', 'Neutronium Alloy', 'Exotic Gases', 'Bio-polymers', 'Quantum Processors'];
+const getRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+const generateTerritoryData = () => ({
+    population: `${getRandomInt(50, 500)}M`,
+    resource: getRandom(resources),
+    defense: `${getRandomInt(20, 95)}%`,
+});
+
+const Territory = ({ position, onSelect, selected, faction }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const [hovered, setHover] = useState(false);
     
     const targetColor = useMemo(() => {
         if (selected) return SELECTED_COLOR;
-        return hovered ? new THREE.Color(faction.color).lerp(new THREE.Color('white'), 0.2).getHexString() : faction.color;
+        if (hovered) return new THREE.Color(faction.color).lerp(new THREE.Color('white'), 0.3).getHexString();
+        return faction.color;
     }, [selected, hovered, faction.color]);
 
     const targetY = selected ? position.y + 0.3 : position.y;
 
     useFrame((state, delta) => {
         if (meshRef.current) {
-            // Animate color
             (meshRef.current.material as THREE.MeshStandardMaterial).color.lerp(new THREE.Color(targetColor), delta * 10);
-            // Animate position (for selection pop-up)
             meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, delta * 8);
         }
     });
@@ -69,46 +79,38 @@ const Territory = ({ position, q, r, s, onSelect, selected, faction }) => {
             scale={[0.95, 0.95, 0.95]}
         >
             <extrudeGeometry args={[hexShape, extrudeSettings]} />
-            <meshStandardMaterial metalness={0.7} roughness={0.3} />
+            <meshStandardMaterial metalness={0.8} roughness={0.2} />
         </mesh>
     );
 };
 
 const HexGrid = ({ onSelectTerritory }) => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const { toast } = useToast();
 
     const handleSelect = (hex) => {
         const id = `${hex.q},${hex.r},${hex.s}`;
         setSelectedId(id);
         onSelectTerritory(hex);
-        toast({
-            title: `Sector ${hex.q}, ${hex.r}, ${hex.s}`,
-            description: `Faction: ${hex.faction.name}`,
-        });
     };
     
     const hexes = useMemo(() => {
         const hexArray = [];
-        const mapRadius = 7;
+        const mapRadius = 10; // Increased from 7
         for (let q = -mapRadius; q <= mapRadius; q++) {
             const r1 = Math.max(-mapRadius, -q - mapRadius);
             const r2 = Math.min(mapRadius, -q + mapRadius);
-            for (let r = r1; r <= r2; r++) {
+            for (let r = r1; r2 >= r; r++) {
                 const s = -q - r;
 
-                // Assign faction randomly
                 let faction = FACTIONS.UNCLAIMED;
                 const rand = Math.random();
-                if (rand > 0.7) {
-                    faction = FACTIONS.CYGNUS;
-                } else if (rand > 0.4) {
-                    faction = FACTIONS.ORION;
-                }
+                if (rand > 0.7) faction = FACTIONS.CYGNUS;
+                else if (rand > 0.4) faction = FACTIONS.ORION;
 
                 hexArray.push({
                     q, r, s, faction,
                     position: new THREE.Vector3(1.732 * q + 0.866 * r, 0, 1.5 * r),
+                    ...generateTerritoryData(),
                 });
             }
         }
@@ -129,46 +131,76 @@ const HexGrid = ({ onSelectTerritory }) => {
     );
 };
 
-const SceneContent = () => {
-    const handleTerritorySelect = (hex) => {
-        console.log('Selected territory:', hex);
-    };
+const BackgroundElements = () => {
+    const nebulaTexture = useTexture('https://placehold.co/1024x1024.png'); // Placeholder, hint will find better one
+    const planetTexture = useTexture('https://placehold.co/512x512.png'); // Placeholder
+    const gasGiantTexture = useTexture('https://placehold.co/512x512.png'); // Placeholder
 
     return (
         <>
-            <ambientLight intensity={0.3} />
-            <directionalLight position={[10, 20, 5]} intensity={1.5} />
-            <pointLight position={[-10, -10, -10]} intensity={1.5} color="#29ABE2" />
-            
-            <fog attach="fog" args={['#171717', 30, 80]} />
+            <fog attach="fog" args={['#101015', 30, 90]} />
             <Stars radius={200} depth={50} count={10000} factor={6} saturation={0} fade speed={1.5} />
+            <ambientLight intensity={0.1} />
+            <directionalLight position={[10, 20, 5]} intensity={1.0} />
+            <pointLight position={[-30, -20, -40]} intensity={2.5} color={FACTIONS.CYGNUS.color} />
+            <pointLight position={[30, 20, -30]} intensity={2.0} color={FACTIONS.ORION.color} />
 
+            <Billboard position={[-40, 10, -50]}>
+                <mesh>
+                    <planeGeometry args={[60, 60]} />
+                    <meshBasicMaterial map={nebulaTexture} blending={THREE.AdditiveBlending} opacity={0.4} transparent data-ai-hint="purple nebula" />
+                </mesh>
+            </Billboard>
+
+            <mesh position={[25, 5, -35]}>
+                <sphereGeometry args={[4, 32, 32]} />
+                <meshStandardMaterial map={planetTexture} roughness={0.8} data-ai-hint="rocky planet" />
+            </mesh>
+            <mesh position={[-20, -8, -45]}>
+                <sphereGeometry args={[6, 32, 32]} />
+                <meshStandardMaterial map={gasGiantTexture} roughness={0.9} data-ai-hint="gas giant" />
+            </mesh>
+        </>
+    );
+};
+
+
+const SceneContent = ({ setSelectedTerritory }) => {
+    return (
+        <>
+            <Suspense fallback={null}>
+                <BackgroundElements />
+            </Suspense>
             <group position={[0, -0.5, 0]}>
-                <HexGrid onSelectTerritory={handleTerritorySelect} />
+                <HexGrid onSelectTerritory={setSelectedTerritory} />
             </group>
-
             <OrbitControls
                 enableZoom={true}
                 enablePan={true}
                 enableRotate={true}
-                minDistance={5}
-                maxDistance={50}
+                minDistance={10}
+                maxDistance={60}
                 maxPolarAngle={Math.PI / 2.1}
                 minPolarAngle={Math.PI / 6}
+                panSpeed={0.5}
             />
         </>
     );
 }
 
 const ThreeScene = () => {
+  const [selectedTerritory, setSelectedTerritory] = useState(null);
+
   return (
     <div className="absolute top-0 left-0 w-full h-full">
       <Canvas
-        camera={{ position: [0, 20, 35], fov: 50 }}
+        camera={{ position: [0, 25, 45], fov: 50 }}
         shadows
+        gl={{ antialias: true }}
       >
-        <SceneContent />
+        <SceneContent setSelectedTerritory={setSelectedTerritory} />
       </Canvas>
+      <TerritoryInfoPanel territory={selectedTerritory} onClose={() => setSelectedTerritory(null)} />
     </div>
   );
 };
