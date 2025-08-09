@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef, useState, useMemo, Suspense } from 'react';
@@ -23,6 +24,44 @@ const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (m
 const noise2D = createNoise2D(Math.random);
 
 // --- Child Components ---
+
+const WarpingShips = () => {
+    const ships = useMemo(() => Array.from({ length: 10 }, () => ({
+        id: Math.random(),
+        position: new THREE.Vector3((Math.random() - 0.5) * 100, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 100),
+        velocity: new THREE.Vector3((Math.random() - 0.5) * 0.5, 0, (Math.random() - 0.5) * 0.5).multiplyScalar(0.2),
+        ref: React.createRef<THREE.Mesh>(),
+    })), []);
+
+    useFrame((state, delta) => {
+        ships.forEach(ship => {
+            if (ship.ref.current) {
+                ship.position.add(ship.velocity);
+                ship.ref.current.position.copy(ship.position);
+                ship.ref.current.lookAt(ship.position.clone().add(ship.velocity));
+
+                const opacity = Math.sin(state.clock.elapsedTime * Math.random() * 0.5) * 0.5 + 0.5;
+                (ship.ref.current.material as THREE.MeshBasicMaterial).opacity = opacity;
+
+                if (ship.position.length() > 60) {
+                     ship.position.set((Math.random() - 0.5) * 100, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 100);
+                     ship.velocity.set((Math.random() - 0.5) * 0.5, 0, (Math.random() - 0.5) * 0.5).multiplyScalar(0.2);
+                }
+            }
+        })
+    });
+
+    return (
+        <group>
+            {ships.map(ship => (
+                 <mesh key={ship.id} ref={ship.ref} position={ship.position}>
+                    <coneGeometry args={[0.2, 1, 4]} />
+                    <meshBasicMaterial color="white" transparent opacity={0} />
+                </mesh>
+            ))}
+        </group>
+    )
+}
 
 const MissionHotspot = ({ position }) => {
     const ref = useRef<THREE.Mesh>(null);
@@ -186,15 +225,31 @@ const SceneContent = ({ setSelectedTerritory }) => {
         <>
             <fog attach="fog" args={['#050508', 60, 120]} />
             <Stars radius={200} depth={50} count={10000} factor={6} saturation={0} fade speed={1.5} />
-            <ambientLight intensity={0.2} />
+            <ambientLight intensity={0.5} />
             <directionalLight position={[5, 10, 5]} intensity={1.5} />
             <pointLight position={[40, 5, 0]} color={FACTIONS.CYGNUS.color} intensity={150} distance={100} />
             <pointLight position={[-40, 5, 0]} color={FACTIONS.ORION.color} intensity={150} distance={100} />
+
+            <Suspense fallback={null}>
+                <Text
+                    position={[0, 12, 0]}
+                    fontSize={4}
+                    color="white"
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={0.05}
+                    outlineColor="#000000"
+                >
+                    SECTOR MAP
+                </Text>
+            </Suspense>
 
             <group position={[0, -0.5, 0]}>
                 <HexGrid onSelectTerritory={setSelectedTerritory} />
             </group>
             
+            <WarpingShips />
+
             <OrbitControls
                 enableZoom={true}
                 enablePan={true}
