@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import Header from '@/components/dominion/header';
@@ -36,12 +37,12 @@ export default function Home() {
         {view === 'dashboard' ? (
           <>
             <BackgroundScene />
-            <main className="flex-1 overflow-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6 z-10">
-              <div className="lg:col-span-1 xl:col-span-1">
+            <main className="flex-1 overflow-auto p-4 lg:p-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6 z-10">
+              <div className="md:col-span-1 lg:col-span-1 xl:col-span-1">
                 <MissionsPanel />
               </div>
-              <div className="lg:col-span-3 xl:col-span-4 flex flex-col gap-4 lg:gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+              <div className="md:col-span-2 lg:col-span-3 xl:col-span-4 flex flex-col gap-4 lg:gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
                   <FactionsPanel />
                   <PlayerStats />
                 </div>

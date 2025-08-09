@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -109,7 +110,7 @@ export default function CharacterPanel() {
     const [characters, setCharacters] = useState<Character[]>([]);
 
     const regenerateCharacters = () => {
-        setCharacters(Array.from({ length: 8 }, generateCharacter));
+        setCharacters(Array.from({ length: 12 }, generateCharacter));
     }
 
     useEffect(() => {
@@ -125,8 +126,8 @@ export default function CharacterPanel() {
                         Regenerate
                     </Button>
                 </div>
-                <ScrollArea className="h-[calc(100vh-27rem)] md:h-[calc(100vh-31rem)] lg:h-[calc(100vh-29rem)]">
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4">
+                <ScrollArea className="flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4 pb-4">
                         {characters.map((char) => <CharacterCard key={char.id} char={char} />)}
                     </div>
                 </ScrollArea>
