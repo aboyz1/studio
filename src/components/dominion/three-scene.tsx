@@ -232,7 +232,7 @@ const SceneContent = ({ setSelectedTerritory }) => {
 
             <Suspense fallback={null}>
                 <Text
-                    position={[0, 15, -30]}
+                    position={[0, 8, -30]}
                     fontSize={6}
                     color="white"
                     anchorX="center"
