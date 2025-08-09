@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useMemo, Suspense } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Stars, Billboard, useTexture } from '@react-three/drei';
+import { OrbitControls, Stars, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import TerritoryInfoPanel from './territory-info-panel';
 
@@ -132,10 +132,6 @@ const HexGrid = ({ onSelectTerritory }) => {
 };
 
 const BackgroundElements = () => {
-    const nebulaTexture = useTexture('https://placehold.co/1024x1024.png'); // Placeholder, hint will find better one
-    const planetTexture = useTexture('https://placehold.co/512x512.png'); // Placeholder
-    const gasGiantTexture = useTexture('https://placehold.co/512x512.png'); // Placeholder
-
     return (
         <>
             <fog attach="fog" args={['#101015', 30, 90]} />
@@ -144,22 +140,6 @@ const BackgroundElements = () => {
             <directionalLight position={[10, 20, 5]} intensity={1.5} />
             <pointLight position={[-30, -20, -40]} intensity={2.5} color={FACTIONS.CYGNUS.color} />
             <pointLight position={[30, 20, -30]} intensity={2.0} color={FACTIONS.ORION.color} />
-
-            <Billboard position={[-40, 10, -50]}>
-                <mesh>
-                    <planeGeometry args={[60, 60]} />
-                    <meshBasicMaterial map={nebulaTexture} blending={THREE.AdditiveBlending} opacity={0.4} transparent data-ai-hint="purple nebula" />
-                </mesh>
-            </Billboard>
-
-            <mesh position={[25, 5, -35]}>
-                <sphereGeometry args={[4, 32, 32]} />
-                <meshStandardMaterial map={planetTexture} roughness={0.8} data-ai-hint="rocky planet" />
-            </mesh>
-            <mesh position={[-20, -8, -45]}>
-                <sphereGeometry args={[6, 32, 32]} />
-                <meshStandardMaterial map={gasGiantTexture} roughness={0.9} data-ai-hint="gas giant" />
-            </mesh>
         </>
     );
 };
