@@ -4,10 +4,55 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Gem, Swords, Shield, Heart, Quote, RefreshCw } from 'lucide-react';
-import { useEffect, useState, useTransition } from 'react';
-import { generateCharacters, type Character } from '@/ai/flows/character-generation';
-import { Skeleton } from '../ui/skeleton';
+import { Gem, Swords, Shield, Heart, Quote } from 'lucide-react';
+
+type Character = {
+    name: string;
+    level: number;
+    rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
+    stats: {
+        attack: number;
+        defense: number;
+        health: number;
+    };
+    backstory: string;
+    imagePrompt: string;
+};
+
+const staticCharacters: Character[] = [
+    {
+        name: 'Jax "The Void"',
+        level: 18,
+        rarity: 'Legendary',
+        stats: { attack: 95, defense: 80, health: 140 },
+        backstory: 'A rogue pilot whose ship is rumored to be powered by a miniature black hole.',
+        imagePrompt: 'cyberpunk pilot legendary'
+    },
+    {
+        name: 'Seraphina',
+        level: 15,
+        rarity: 'Epic',
+        stats: { attack: 80, defense: 65, health: 110 },
+        backstory: 'A master strategist who can predict enemy movements with uncanny accuracy.',
+        imagePrompt: 'female strategist epic'
+    },
+    {
+        name: 'Grunt-7',
+        level: 10,
+        rarity: 'Rare',
+        stats: { attack: 60, defense: 90, health: 120 },
+        backstory: 'A genetically engineered super-soldier, loyal only to the highest bidder.',
+        imagePrompt: 'armored super soldier rare'
+    },
+    {
+        name: 'Rook',
+        level: 8,
+        rarity: 'Common',
+        stats: { attack: 45, defense: 55, health: 90 },
+        backstory: 'A scrappy mechanic who keeps the faction\'s ships flying with spit and grit.',
+        imagePrompt: 'space mechanic common'
+    },
+];
 
 const rarityColor: Record<string, string> = {
     Common: 'border-gray-400',
@@ -55,63 +100,13 @@ function CharacterCard({ char }: { char: Character }) {
     );
 }
 
-function CharacterSkeleton() {
-    return (
-        <Card className="bg-card/70 backdrop-blur-sm overflow-hidden">
-            <CardHeader className="p-4 flex flex-row items-center gap-4">
-                <Skeleton className="h-16 w-16 rounded-full" />
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-32" />
-                    <div className="flex gap-2">
-                        <Skeleton className="h-5 w-12" />
-                        <Skeleton className="h-5 w-16" />
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="space-y-3 mb-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                </div>
-                 <Skeleton className="h-8 w-full" />
-                 <Skeleton className="h-10 w-full mt-4" />
-            </CardContent>
-        </Card>
-    );
-}
-
 export default function CharacterPanel() {
-    const [characters, setCharacters] = useState<Character[]>([]);
-    const [isPending, startTransition] = useTransition();
-
-    const fetchCharacters = () => {
-        startTransition(async () => {
-            const { characters } = await generateCharacters();
-            setCharacters(characters);
-        });
-    }
-
-    useEffect(() => {
-        fetchCharacters();
-    }, []);
-
     return (
         <Card className="h-full bg-transparent border-0 shadow-none">
             <CardContent className="p-0 h-full flex flex-col">
-                <div className="px-4 pb-2 -mr-4 flex justify-end">
-                    <Button variant="ghost" size="sm" onClick={fetchCharacters} disabled={isPending}>
-                        <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? 'animate-spin' : ''}`} />
-                        {isPending ? 'Generating...' : 'Regenerate'}
-                    </Button>
-                </div>
-                <ScrollArea className="h-[calc(100vh-25rem)] md:h-[calc(100vh-29rem)] lg:h-[calc(100vh-27rem)]">
+                <ScrollArea className="h-[calc(100vh-23rem)] md:h-[calc(100vh-27rem)] lg:h-[calc(100vh-25rem)]">
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4">
-                        {isPending && characters.length === 0 ? (
-                            Array.from({ length: 4 }).map((_, i) => <CharacterSkeleton key={i} />)
-                        ) : (
-                            characters.map((char) => <CharacterCard key={char.name} char={char} />)
-                        )}
+                        {staticCharacters.map((char) => <CharacterCard key={char.name} char={char} />)}
                     </div>
                 </ScrollArea>
             </CardContent>
