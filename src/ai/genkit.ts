@@ -1,8 +1,8 @@
 'use server';
 
 import {genkit, Plugin, ZodObject} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {firebase} from '@genkit-ai/firebase';
+import googleAI from '@genkit-ai/googleai';
+import firebase from '@genkit-ai/firebase';
 import {z} from 'zod';
 
 const DYNAMIC_TYPENAME_FOR_EXPORT = 'Not a real type';
