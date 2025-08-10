@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Gem, Swords, Shield, Heart, Quote, RefreshCw } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Gem, Swords, Shield, Heart, Quote } from 'lucide-react';
 
 type Character = {
-    id: string;
+    mintAddress: string;
     name: string;
     level: number;
     rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
@@ -22,18 +23,80 @@ type Character = {
     imagePrompt: string;
 };
 
-const firstNames = ['Jax', 'Seraphina', 'Valerius', 'Kael', 'Nyx', 'Rook', 'Orion', 'Lyra'];
-const epithets = ['The Void', 'The Star-Smasher', 'The Comet', 'The Swift', 'The Shadow', 'The Engineer', 'The Merciless', 'The Ghost'];
-const backstorySnippets = [
-    'A rogue pilot whose ship is rumored to be powered by a miniature black hole.',
-    'A master strategist who can predict enemy movements with uncanny accuracy.',
-    'A genetically engineered super-soldier, loyal only to the highest bidder.',
-    'A scrappy mechanic who keeps the faction\'s ships flying with spit and grit.',
-    'A bounty hunter who never fails to bring back their target, dead or alive.',
-    'A disgraced royal guard seeking to restore their honor on the battlefield.',
-    'A cybernetic ronin wandering the galaxy in search of a worthy opponent.'
+const sampleCharacters: Character[] = [
+    {
+        mintAddress: 'CHAR1_AdWgFv...89oG',
+        name: 'Jax "The Void" Stryker',
+        level: 18,
+        rarity: 'Epic',
+        stats: { attack: 88, defense: 75, health: 120 },
+        backstory: 'A rogue pilot whose ship is rumored to be powered by a miniature black hole, wanted in three systems.',
+        imagePrompt: 'male cyberpunk pilot epic armor'
+    },
+    {
+        mintAddress: 'CHAR2_bRtHjK...pL9a',
+        name: 'Seraphina "Starlight" Valerius',
+        level: 20,
+        rarity: 'Legendary',
+        stats: { attack: 95, defense: 90, health: 145 },
+        backstory: 'A master strategist who can predict enemy movements with uncanny accuracy, once a high commander.',
+        imagePrompt: 'female strategist legendary uniform'
+    },
+    {
+        mintAddress: 'CHAR3_cTyUnM...wE4z',
+        name: 'Kael "The Comet" Rook',
+        level: 12,
+        rarity: 'Rare',
+        stats: { attack: 72, defense: 68, health: 105 },
+        backstory: 'A genetically engineered super-soldier, loyal only to the highest bidder and his own code of honor.',
+        imagePrompt: 'armored super soldier rare gear'
+    },
+    {
+        mintAddress: 'CHAR4_dFgBoP...zX1v',
+        name: 'Nyx "The Shadow" Ironhand',
+        level: 8,
+        rarity: 'Common',
+        stats: { attack: 60, defense: 55, health: 95 },
+        backstory: 'A scrappy mechanic who keeps the faction\'s ships flying with spit, grit, and stolen parts.',
+        imagePrompt: 'female space mechanic common clothes'
+    },
+    {
+        mintAddress: 'CHAR5_eHvCsQ...sT3b',
+        name: 'Orion "Mercy" Kade',
+        level: 15,
+        rarity: 'Rare',
+        stats: { attack: 80, defense: 60, health: 110 },
+        backstory: 'A bounty hunter who never fails to bring back their target, known for completing "impossible" jobs.',
+        imagePrompt: 'bounty hunter rare armor'
+    },
+    {
+        mintAddress: 'CHAR6_fJkWbZ...uN7k',
+        name: 'Lyra "The Ghost" Chen',
+        level: 19,
+        rarity: 'Epic',
+        stats: { attack: 85, defense: 92, health: 130 },
+        backstory: 'A disgraced royal guard seeking to restore their honor on the battlefield, an expert in stealth ops.',
+        imagePrompt: 'royal guard epic stealth suit'
+    },
+    {
+        mintAddress: 'CHAR7_gLpXvA...vM5h',
+        name: 'Valerius "Ronin" Specter',
+        level: 16,
+        rarity: 'Rare',
+        stats: { attack: 82, defense: 70, health: 115 },
+        backstory: 'A cybernetic ronin wandering the galaxy in search of a worthy opponent and a lost memory.',
+        imagePrompt: 'cybernetic ronin rare cloak'
+    },
+     {
+        mintAddress: 'CHAR8_hMqYwB...wP9j',
+        name: 'Rook "The Engineer" Flint',
+        level: 5,
+        rarity: 'Common',
+        stats: { attack: 52, defense: 65, health: 100 },
+        backstory: 'An inventive engineer who can turn a pile of scrap into a functional weapon system overnight.',
+        imagePrompt: 'space engineer common workshop'
+    }
 ];
-const imagePrompts = ['cyberpunk pilot', 'female strategist', 'armored super soldier', 'space mechanic', 'bounty hunter', 'royal guard', 'cybernetic ronin'];
 
 const rarityColor: Record<string, string> = {
     Common: 'border-gray-400',
@@ -42,30 +105,6 @@ const rarityColor: Record<string, string> = {
     Legendary: 'border-yellow-500',
 };
 
-const getRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
-
-const generateCharacter = (): Character => {
-    const attack = 50 + Math.floor(Math.random() * 50);
-    const defense = 50 + Math.floor(Math.random() * 50);
-    const health = 90 + Math.floor(Math.random() * 60);
-    const totalStats = attack + defense + health;
-    const backstoryIndex = Math.floor(Math.random() * backstorySnippets.length);
-
-    let rarity: Character['rarity'] = 'Common';
-    if (totalStats > 280) rarity = 'Legendary';
-    else if (totalStats > 240) rarity = 'Epic';
-    else if (totalStats > 200) rarity = 'Rare';
-
-    return {
-        id: crypto.randomUUID(),
-        name: `${getRandom(firstNames)} "${getRandom(epithets)}"`,
-        level: Math.floor(1 + Math.random() * 19),
-        rarity,
-        stats: { attack, defense, health },
-        backstory: backstorySnippets[backstoryIndex],
-        imagePrompt: `${imagePrompts[backstoryIndex]} ${rarity.toLowerCase()}`,
-    };
-};
 
 function CharacterCard({ char }: { char: Character }) {
     return (
@@ -98,9 +137,18 @@ function CharacterCard({ char }: { char: Character }) {
                     </div>
                     <CardDescription className="text-xs italic flex gap-2"><Quote size={12} className="flex-shrink-0" /> {char.backstory}</CardDescription>
                 </div>
-                <Button className="w-full mt-4" variant="secondary">
-                    <Gem className="mr-2" size={16} /> Upgrade
-                </Button>
+                 <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button className="w-full mt-4" variant="secondary" disabled>
+                                <Gem className="mr-2" size={16} /> Upgrade
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Character upgrades coming soon!</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </CardContent>
         </Card>
     );
@@ -109,29 +157,25 @@ function CharacterCard({ char }: { char: Character }) {
 export default function CharacterPanel() {
     const [characters, setCharacters] = useState<Character[]>([]);
 
-    const regenerateCharacters = () => {
-        setCharacters(Array.from({ length: 12 }, generateCharacter));
-    }
-
     useEffect(() => {
-        regenerateCharacters();
+        // In the future, this will fetch characters from the Honeycomb Protocol
+        setCharacters(sampleCharacters);
     }, []);
 
     return (
         <Card className="h-full bg-transparent border-0 shadow-none">
             <CardContent className="p-0 h-full flex flex-col">
-                 <div className="p-4 pl-0 pb-2 flex justify-end">
-                    <Button onClick={regenerateCharacters} variant="outline">
-                        <RefreshCw size={16} className="mr-2" />
-                        Regenerate
-                    </Button>
+                 <div className="p-4 pl-0 pb-2 flex justify-between items-center">
+                    <p className="text-sm text-muted-foreground">Your available crew. Fetched from blockchain.</p>
                 </div>
                 <ScrollArea className="flex-1">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4 pb-4">
-                        {characters.map((char) => <CharacterCard key={char.id} char={char} />)}
+                        {characters.map((char) => <CharacterCard key={char.mintAddress} char={char} />)}
                     </div>
                 </ScrollArea>
             </CardContent>
         </Card>
     );
 }
+
+    
