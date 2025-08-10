@@ -8,7 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit/zod';
+import {z} from 'zod';
 import {v4 as uuidv4} from 'uuid';
 
 export const CharacterSchema = z.object({
