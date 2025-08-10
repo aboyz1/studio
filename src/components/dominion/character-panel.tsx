@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +8,23 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Gem, Swords, Shield, Heart, Quote, RefreshCcw, Loader2 } from 'lucide-react';
-import { generateCharacters, Character } from '@/lib/character-generator';
 import { useToast } from '@/hooks/use-toast';
+
+export type Rarity = 'Common' | 'Rare' | 'Epic' | 'Legendary';
+
+export interface Character {
+  mintAddress: string;
+  name: string;
+  level: number;
+  rarity: Rarity;
+  stats: {
+    attack: number;
+    defense: number;
+    health: number;
+  };
+  backstory: string;
+  imagePrompt: string;
+}
 
 const rarityColor: Record<string, string> = {
     Common: 'border-gray-400',
@@ -17,6 +32,59 @@ const rarityColor: Record<string, string> = {
     Epic: 'border-purple-500',
     Legendary: 'border-yellow-500',
 };
+
+const initialCharacters: Character[] = [
+    {
+      mintAddress: 'CHAR_MINT_1',
+      name: 'Jax Volkov',
+      level: 12,
+      rarity: 'Rare',
+      stats: { attack: 72, defense: 68, health: 110 },
+      backstory: 'A disgraced war hero seeking redemption on the galactic frontier.',
+      imagePrompt: 'portrait of a sci-fi soldier, Jax Volkov, Rare rarity, detailed tactical gear, serious expression',
+    },
+    {
+      mintAddress: 'CHAR_MINT_2',
+      name: 'Lyra Blackwood',
+      level: 25,
+      rarity: 'Legendary',
+      stats: { attack: 95, defense: 92, health: 140 },
+      backstory: 'A cybernetically-enhanced assassin trying to escape their shadowy past.',
+      imagePrompt: 'portrait of a sci-fi assassin, Lyra Blackwood, Legendary rarity, cybernetic enhancements, cloaked, determined look',
+    },
+];
+
+// Local character generator
+const mockBackstories = [
+    'A brilliant engineer who deserted a corporate mega-conglomerate with stolen blueprints.',
+    'A master smuggler who knows every hidden hyperspace lane in the sector.',
+    'A battle-hardened medic who has seen the horrors of a dozen wars.',
+    'A genetically-engineered soldier created for a war that ended before they were deployed.',
+    'A charming rogue with a heart of gold and a knack for getting into trouble.'
+];
+const firstNames = ['Zane', 'Kira', 'Rook', 'Vesper', 'Corvus'];
+const lastNames = ['Stryker', 'Vex', 'Helios', 'Cypher', 'Odyssey'];
+
+const getRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+function createNewCharacter(): Character {
+    const name = `${getRandom(firstNames)} ${getRandom(lastNames)}`;
+    return {
+        mintAddress: `SIM_${Date.now()}`,
+        name,
+        level: getRandomInt(1, 5),
+        rarity: 'Common',
+        stats: {
+            attack: getRandomInt(50, 65),
+            defense: getRandomInt(50, 65),
+            health: getRandomInt(90, 100),
+        },
+        backstory: getRandom(mockBackstories),
+        imagePrompt: `portrait of a sci-fi character, ${name}, Common rarity`,
+    };
+}
+
 
 function CharacterCard({ char }: { char: Character }) {
     return (
@@ -67,66 +135,64 @@ function CharacterCard({ char }: { char: Character }) {
 }
 
 export default function CharacterPanel() {
-    const [characters, setCharacters] = useState<Character[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [characters, setCharacters] = useState<Character[]>(initialCharacters);
+    const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
-    const handleGenerateCharacters = () => {
+    const handleAssembleCharacter = async () => {
         setIsLoading(true);
+        // Simulate a short delay for a better user experience
+        await new Promise(resolve => setTimeout(resolve, 500));
         try {
-            // This is now an instant, client-side operation
-            const newCharacters = generateCharacters({count: 8});
-            setCharacters(newCharacters);
+            const newCharacter = createNewCharacter();
+            setCharacters(prev => [...prev, newCharacter]);
+            toast({
+                title: 'Character Assembled!',
+                description: `${newCharacter.name} has joined your crew.`,
+            });
         } catch(e) {
             console.error(e);
             toast({
                 variant: 'destructive',
-                title: 'Character Generation Failed',
+                title: 'Assembly Failed',
                 description:
-                'There was an error generating new characters. Please try again.',
+                'There was an error assembling a new character. Please try again.',
             });
         } finally {
             setIsLoading(false);
         }
     };
-    
-    useEffect(() => {
-        handleGenerateCharacters();
-    }, []);
 
     return (
         <Card className="h-full bg-transparent border-0 shadow-none">
             <CardContent className="p-0 h-full flex flex-col">
                  <div className="p-4 pl-0 pb-2 flex justify-between items-center">
-                    <p className="text-sm text-muted-foreground">Your available crew. Assembled locally.</p>
-                     <Button variant="outline" size="sm" onClick={handleGenerateCharacters} disabled={isLoading}>
+                    <p className="text-sm text-muted-foreground">Your assembled crew. Ready for deployment.</p>
+                     <Button variant="outline" size="sm" onClick={handleAssembleCharacter} disabled={isLoading}>
                         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
-                        Assemble New Crew
+                        Assemble New Character
                     </Button>
                 </div>
                 <ScrollArea className="flex-1">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4 pb-4">
-                        {isLoading && characters.length === 0 ? (
-                           Array.from({ length: 8 }).map((_, index) => (
-                                <Card key={index} className="bg-card/70 backdrop-blur-sm">
-                                    <CardHeader className="p-4 flex flex-row items-center gap-4">
-                                        <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
-                                        <div className="space-y-2">
-                                            <div className="h-5 w-40 bg-muted animate-pulse rounded" />
-                                            <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="p-4 pt-0">
-                                        <div className="space-y-2">
-                                            <div className="h-4 w-full bg-muted animate-pulse rounded" />
-                                            <div className="h-4 w-full bg-muted animate-pulse rounded" />
-                                            <div className="h-10 w-full bg-muted animate-pulse rounded mt-4" />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                           ))
-                        ) : (
-                            characters.map((char) => <CharacterCard key={char.mintAddress} char={char} />)
+                        {characters.map((char) => <CharacterCard key={char.mintAddress} char={char} />)}
+                        {isLoading && (
+                            <Card className="bg-card/70 backdrop-blur-sm">
+                                <CardHeader className="p-4 flex flex-row items-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
+                                    <div className="space-y-2">
+                                        <div className="h-5 w-40 bg-muted animate-pulse rounded" />
+                                        <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <div className="space-y-2">
+                                        <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                                        <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                                        <div className="h-10 w-full bg-muted animate-pulse rounded mt-4" />
+                                    </div>
+                                </CardContent>
+                            </Card>
                         )}
                     </div>
                 </ScrollArea>
