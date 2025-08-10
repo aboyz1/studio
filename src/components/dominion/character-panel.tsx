@@ -7,96 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Gem, Swords, Shield, Heart, Quote } from 'lucide-react';
-
-type Character = {
-    mintAddress: string;
-    name: string;
-    level: number;
-    rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
-    stats: {
-        attack: number;
-        defense: number;
-        health: number;
-    };
-    backstory: string;
-    imagePrompt: string;
-};
-
-const sampleCharacters: Character[] = [
-    {
-        mintAddress: 'CHAR1_AdWgFv...89oG',
-        name: 'Jax "The Void" Stryker',
-        level: 18,
-        rarity: 'Epic',
-        stats: { attack: 88, defense: 75, health: 120 },
-        backstory: 'A rogue pilot whose ship is rumored to be powered by a miniature black hole, wanted in three systems.',
-        imagePrompt: 'male cyberpunk pilot epic armor'
-    },
-    {
-        mintAddress: 'CHAR2_bRtHjK...pL9a',
-        name: 'Seraphina "Starlight" Valerius',
-        level: 20,
-        rarity: 'Legendary',
-        stats: { attack: 95, defense: 90, health: 145 },
-        backstory: 'A master strategist who can predict enemy movements with uncanny accuracy, once a high commander.',
-        imagePrompt: 'female strategist legendary uniform'
-    },
-    {
-        mintAddress: 'CHAR3_cTyUnM...wE4z',
-        name: 'Kael "The Comet" Rook',
-        level: 12,
-        rarity: 'Rare',
-        stats: { attack: 72, defense: 68, health: 105 },
-        backstory: 'A genetically engineered super-soldier, loyal only to the highest bidder and his own code of honor.',
-        imagePrompt: 'armored super soldier rare gear'
-    },
-    {
-        mintAddress: 'CHAR4_dFgBoP...zX1v',
-        name: 'Nyx "The Shadow" Ironhand',
-        level: 8,
-        rarity: 'Common',
-        stats: { attack: 60, defense: 55, health: 95 },
-        backstory: 'A scrappy mechanic who keeps the faction\'s ships flying with spit, grit, and stolen parts.',
-        imagePrompt: 'female space mechanic common clothes'
-    },
-    {
-        mintAddress: 'CHAR5_eHvCsQ...sT3b',
-        name: 'Orion "Mercy" Kade',
-        level: 15,
-        rarity: 'Rare',
-        stats: { attack: 80, defense: 60, health: 110 },
-        backstory: 'A bounty hunter who never fails to bring back their target, known for completing "impossible" jobs.',
-        imagePrompt: 'bounty hunter rare armor'
-    },
-    {
-        mintAddress: 'CHAR6_fJkWbZ...uN7k',
-        name: 'Lyra "The Ghost" Chen',
-        level: 19,
-        rarity: 'Epic',
-        stats: { attack: 85, defense: 92, health: 130 },
-        backstory: 'A disgraced royal guard seeking to restore their honor on the battlefield, an expert in stealth ops.',
-        imagePrompt: 'royal guard epic stealth suit'
-    },
-    {
-        mintAddress: 'CHAR7_gLpXvA...vM5h',
-        name: 'Valerius "Ronin" Specter',
-        level: 16,
-        rarity: 'Rare',
-        stats: { attack: 82, defense: 70, health: 115 },
-        backstory: 'A cybernetic ronin wandering the galaxy in search of a worthy opponent and a lost memory.',
-        imagePrompt: 'cybernetic ronin rare cloak'
-    },
-     {
-        mintAddress: 'CHAR8_hMqYwB...wP9j',
-        name: 'Rook "The Engineer" Flint',
-        level: 5,
-        rarity: 'Common',
-        stats: { attack: 52, defense: 65, health: 100 },
-        backstory: 'An inventive engineer who can turn a pile of scrap into a functional weapon system overnight.',
-        imagePrompt: 'space engineer common workshop'
-    }
-];
+import { Gem, Swords, Shield, Heart, Quote, RefreshCcw, Loader2 } from 'lucide-react';
+import { generateCharacters, Character } from '@/ai/flows/generate-character';
+import { useToast } from '@/hooks/use-toast';
 
 const rarityColor: Record<string, string> = {
     Common: 'border-gray-400',
@@ -104,7 +17,6 @@ const rarityColor: Record<string, string> = {
     Epic: 'border-purple-500',
     Legendary: 'border-yellow-500',
 };
-
 
 function CharacterCard({ char }: { char: Character }) {
     return (
@@ -156,26 +68,72 @@ function CharacterCard({ char }: { char: Character }) {
 
 export default function CharacterPanel() {
     const [characters, setCharacters] = useState<Character[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
 
+    const handleGenerateCharacters = async () => {
+        setIsLoading(true);
+        try {
+            const newCharacters = await generateCharacters({count: 8});
+            setCharacters(newCharacters);
+             toast({
+                title: "Crew Generated",
+                description: "Your new crew members are ready for assignment.",
+            });
+        } catch(e) {
+            console.error(e);
+            toast({
+                variant: 'destructive',
+                title: 'Character Generation Failed',
+                description:
+                'There was an error generating new characters. Please try again.',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
     useEffect(() => {
-        // In the future, this will fetch characters from the Honeycomb Protocol
-        setCharacters(sampleCharacters);
+        handleGenerateCharacters();
     }, []);
 
     return (
         <Card className="h-full bg-transparent border-0 shadow-none">
             <CardContent className="p-0 h-full flex flex-col">
                  <div className="p-4 pl-0 pb-2 flex justify-between items-center">
-                    <p className="text-sm text-muted-foreground">Your available crew. Fetched from blockchain.</p>
+                    <p className="text-sm text-muted-foreground">Your available crew. Generated by AI.</p>
+                     <Button variant="outline" size="sm" onClick={handleGenerateCharacters} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
+                        Generate New Crew
+                    </Button>
                 </div>
                 <ScrollArea className="flex-1">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4 pb-4">
-                        {characters.map((char) => <CharacterCard key={char.mintAddress} char={char} />)}
+                        {isLoading && characters.length === 0 ? (
+                           Array.from({ length: 8 }).map((_, index) => (
+                                <Card key={index} className="bg-card/70 backdrop-blur-sm">
+                                    <CardHeader className="p-4 flex flex-row items-center gap-4">
+                                        <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
+                                        <div className="space-y-2">
+                                            <div className="h-5 w-40 bg-muted animate-pulse rounded" />
+                                            <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <div className="space-y-2">
+                                            <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                                            <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                                            <div className="h-10 w-full bg-muted animate-pulse rounded mt-4" />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                           ))
+                        ) : (
+                            characters.map((char) => <CharacterCard key={char.mintAddress} char={char} />)
+                        )}
                     </div>
                 </ScrollArea>
             </CardContent>
         </Card>
     );
 }
-
-    
